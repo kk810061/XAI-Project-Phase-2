@@ -1,0 +1,30 @@
+# Core Audio & Deep Learning
+torch
+torchaudio
+transformers>=4.30.0
+whisperx
+ctranslate2
+faster-whisper<1.1
+huggingface-hub
+
+# XAI & Explainability
+captum
+lime
+scikit-learn
+
+# Audio Processing & Paralinguistic Perturbations
+librosa
+pydub
+soundfile
+audiomentations
+audiostretchy
+pyroomacoustics
+
+# Data & Visualization
+numpy
+pandas
+seaborn
+datasets
+nltk
+omegaconf
+IPython

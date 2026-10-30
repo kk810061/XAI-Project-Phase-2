@@ -1,0 +1,4 @@
+,pitch shifting,pitch shifting down,pitch shifting up,time stretching,time stretching down,time stretching up,reverberation,noise
+action=increase,0.08,0.04,0.13,0.11,0.19,0.04,0.63,0.44
+object=heat,0.02,-0.0,0.04,0.0,0.0,0.0,0.0,0.29
+location=bedroom,0.22,0.13,0.33,0.02,0.03,0.01,0.28,0.6

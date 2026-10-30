@@ -1,0 +1,52 @@
+Page 1: Figure 1: Explanation with word-level and paralinguis-
+Page 2: usability. Figure 1 shows a sample explanation.
+Page 2: Figure 1 (top) for an example.
+Page 3: Figure 2: Word-level Time Alignment identifies audio
+Page 3: prediction toward a different class.4 See Figure 1
+Page 3: sentations.5 Figure 2 shows an example neighbor-
+Page 4: Table 1 shows the word-level audio segment ex-
+Page 5: Table 1: Example of word-level audio segment explana-
+Page 5: Table 2: Example of paralinguistic attribution r(x, p)
+Page 5: and noise injection; FSC dataset, instance in Table 1.
+Page 5: Table 2 shows the paralinguistic explanation. In-
+Page 5: ~Xp, for differentp, using heatmaps. Figure 3 shows
+Page 5: Figure 3: rp(~x) breakdown for p := time stretching,
+Page 6: Figure 4: Top 15 most influential words, separately for
+Page 6: Table 3: Averager(x, p) for p := time stretching (speed
+Page 6: Figure 4 shows a summary plot for the word-
+Page 6: class(es). From Figure 4, the importance score for
+Page 6: Table 3 shows the average importance score of
+Page 7: Table 4: Comprehensiveness (↑, top) and Sufficiency (↓, bottom) scores for our word attribution explanation via
+Page 7: Results. Table 4 shows the comprehensiveness
+Page 7: deviation. The results in Table 4 show that our
+Page 14: Table 5: Example of word-level audio segment explana-
+Page 14: Table 6: Example of paralinguistic attribution; IEMO-
+Page 14: CAP dataset, instance in Table 5.
+Page 14: for an instance of IEMOCAP. Figure 5 further fo-
+Page 14: introducing reverberation and noise (see Table 6).
+Page 14: Figure 5: rp(~x) breakdown for p := time stretching,
+Page 14: and pitch shifting; same instance x of Table 5.
+Page 14: Table 7: Example of word-level audio segment explana-
+Page 14: Table 8: Example of paralinguistic attribution; IEMO-
+Page 14: CAP dataset, instance in Table 7.
+Page 14: Figure 5. In all these cases, the model labels the
+Page 14: Table 7 and 8 show the word-level attributions
+Page 14: tion. At the word level (Table 7), ‘ huh?’ and
+Page 14: in Figure 6, all time-stretching transformations in-
+Page 14: pitch ( for values≥3 in Figure 6). The prediction
+Page 15: Figure 6: rp(~x) breakdown for p := time stretching,
+Page 15: and pitch shifting; same instance x of Table 7.
+Page 15: Figure 7: Average rp(~x) for 50 instances of the IEMO-
+Page 15: Figure 8: Average rp(~x) for 50 instances of the IEMO-
+Page 16: Category Bar Words Table Bar Words Table
+Page 16: Table 9: User study - Effectiveness of the visualization. Average and standard deviation scores for the four questions.
+Page 16: Category Bar, Words Bar, Table Word, Table Bar, Words Bar, Table Word, Table
+Page 16: Table 10: User study - Effectiveness of the visualization. p-value of the pairwise Wilcoxon test. The statistically
+Page 16: Table 11: User study - Effectiveness of the visualization.
+Page 17: Figure 9: Statistics of participants. Expertise in machine
+Page 17: undeclared) of participants. Table 12 reports the
+Page 17: Figure 9 presents the statistics in percentage
+Page 17: Table 9 shows the average and standard deviation
+Page 17: and say that the three scores differ. Table 11 shows
+Page 17: for each pair of visualizations. Table 10 reports the
+Page 18: Table 12: Gender and age distribution of the participants.

@@ -1,0 +1,415 @@
+=== PAGE 4 ===
+rp(~x) = f (y = k|x)− f (y = k|~x) (2)
+r(x, p) = 1
+| ~Xp|
+∑
+~x∈ ~Xp
+rp(~x) (3)
+where rp(~x) is effect of an individual perturba-
+tion, ~Xp = {~x1, .., ~xt} is the set of t transformed
+signals along p, and r(x, p) is the final relevance.
+The number t depends on the considered feature
+(see §3).
+Each r(x, p) is bound between−1 and 1. High
+absolute values indicate that the model is sensitive
+to perturbations of the considered feature. In con-
+trast, near-zero values indicate that it is otherwise
+robust. Moreover, positive values indicate that, on
+average, the perturbations reduce the prediction
+probability for the given class; negative ones indi-
+cate that perturbations increase it.
+3 Experimental Setup
+Datasets and Tasks. We evaluate our method on
+three datasets and two tasks: FLUENT SPEECH
+COMMANDS (FSC; Lugosch et al., 2019) and
+the Italian Intent Classification Dataset (ITALIC;
+Koudounas et al., 2023a) for the Intent Classifica-
+tion (IC) task, and IEMOCAP (Busso et al., 2008)
+for Emotion Recognition (ER).
+FSC is a widely used benchmark dataset for the
+IC task. The dataset contains recordings of inter-
+actions with home voice assistants. The goal is
+to predict an intent as the combination of three
+independent predictions, i.e., an action (e.g., “in-
+crease”), an object (e.g., “heat”), and a location
+(e.g., “bedroom”). We focus on the test set, which
+comprises 3793 audio samples.
+ITALIC is an IC dataset for the Italian language,
+including 60 unique intents. The test set consists
+of 1441 samples. We use the “Speaker” setup,
+wherein each speaker utterances belong to a single
+set among the train, validation, and test.
+IEMOCAP is a dataset for the ER task anno-
+tated with emotion labels (i.e., happiness, anger,
+sadness, frustration, and a neutral state). It consists
+of recorded interactions between pairs of actors
+engaged in scripted scenarios involving ten unique
+actors. Among its five sessions, we consider Ses-
+sion ‘1’, consisting of 942 utterances.
+Models. We consider the monolingual English
+wav2vec 2.0 base (Baevski et al., 2020) for FSC
+and IEMOCAP . We use pre-existing fine-tuned
+checkpoints on the two datasets (Yang et al., 2021a).
+We use the multilingual XLS-R (Babu et al., 2022)
+and its fine-tuned checkpoints (Koudounas et al.,
+2023a) for ITALIC.
+Word-level Audio Alignment and Transcription.
+We use WhisperX (Bain et al., 2023), a state-of-
+the-art multi-lingual word-level alignment and tran-
+scription model, to transcribe dataset audios and
+obtain word-level timestamps.
+We use the gold transcriptions of the datasets
+to compute the word error rate (WER). WhisperX,
+based on Whisper (Radford et al., 2023) for gen-
+erating transcriptions, achieves a WER of 1.72 on
+FSC, 15.77 on IEMOCAP, and 7.49 on ITALIC.
+Paralinguistic Features. We consider pitch shift-
+ing, time stretching, background white noise injec-
+tion, and reverberation. We provide further details
+on the transformations in Appendix B.2 and in our
+repository.
+Explanation Setup. For each sample of the set,
+we explain the probability that the model assigns to
+the predicted label. Explaining the predicted class
+provides insights into how the model produced its
+prediction.
+4 Results
+4.1 Qualitative Evaluation
+We conducted a qualitative manual evaluation. We
+observe local (instance-level) and global explana-
+tions (Doshi-Velez and Kim, 2017). Instance-level
+explanations provide insights into which features
+influence the model to classify a specific instance.
+Local explanations address questions such as: Is it
+correct for the right reasons? Or: Was the predic-
+tion robust to a specific input perturbation? Global
+explanations provide an aggregate view to grasp
+high-level model characteristics.
+Individual level. We show the capabilities of our
+method by explaining wav2vec 2.0 on a FSC sam-
+ple. We refer the reader to Appendix C for more ex-
+amples. For a specific utterance with transcription
+“Turn up the bedroom heat,” the model correctly
+predicts increase as the action, heat as the object,
+and bedroom as the location, fully identifying the
+intent.
+Table 1 shows the word-level audio segment ex-
+planation for this utterance computed for the pre-
+dicted class for each intent slot.6 The explanation
+6For convenience, the Table’s header reports the tran-
+scribed words. However, we would like to remark that our
+2224
+=== PAGE 5 ===
+Turn up the bedroom heat.
+act=increase 0.250 0.545 0.260 0.139 0.021
+obj=heat 0 0 0 0.014 0.550
+loc=bedroom 0.002 0.006 0.087 0.997 0.323
+Table 1: Example of word-level audio segment explana-
+tion; FSC dataset. The higher the value (and darker the
+color), the more the audio segment is relevant for the
+prediction.
+speed pitch
+up down down up reverb noise
+act=increase 0.19 0.04 0.04 0.13 0.56 0.44
+obj=heat 0 0 0 0.04 0 0.29
+loc=bedroom 0.03 0.01 0.13 0.33 0.36 0.60
+Table 2: Example of paralinguistic attribution r(x, p)
+for p := time stretching (speed variation), pitch shifting,
+and noise injection; FSC dataset, instance in Table 1.
+The higher the value (and darker the color), the more
+the model is sensitive to perturbing the feature.
+reveals that the segment relative to the word ‘up’ is
+the most relevant term for the action increase. The
+words “heat” and “ bedroom” increase the prob-
+ability of the predictions heat and bedroom, re-
+spectively. Such explanations are reasonable and
+aligned with our expectations. We expand on ex-
+planation plausibility by conducting a user study
+with human subjects in §5.
+Table 2 shows the paralinguistic explanation. In-
+creasing the speed of the signal has a moderate
+effect on the prediction “action=increase” but none
+on the others. 7 Increasing the pitch impacts the
+prediction of the location and also of the action.
+Lowering the pitch affects the location slot. The
+reverberation impacts the prediction for the action
+slot and slightly for the location; on the other hand,
+the object prediction is not affected. The prediction
+for this instance is affected by the introduction of
+noise, specifically for the location and the action.
+To get a finer-grained view on the effect of par-
+alinguistic perturbation, we inspect r( ~xi),∀ ~xi∈
+~Xp, for differentp, using heatmaps. Figure 3 shows
+r(~x) when stretching the audio (i.e., increasing and
+decreasing speed), shifting the pitch, and injecting
+noise. The model’s prediction are always robust to
+time stretching but one case. Halving the duration
+approach works end-to-end at the audio level, and importance
+scores relate to audio segments.
+7Editing paralinguistic features has no symmetrical effects.
+E.g., increasing noise for a highly-noisy signal will not likely
+change the prediction. We expect a similar effect on prosody.
+Tuning the pitch up or down will contribute differently based
+on the original pitch of the signal.
+0.55
+faster
+0.7 0.85 x 1.15 1.3 1.45
+slowerstretching factor
+increase
+heat
+bedroom
+time stretching
+-5.0
+lower
+-3.0 -1.0 x 1.0 3.0 5.0
+highersemitones
+increase
+heat
+bedroom
+pitch shifting
+x 10.0 4.0 1.0
+noisersignal-to-noise ratio (dB)
+increase
+heat
+bedroom
+noise
+1.0
+0.5
+0.0
+0.5
+1.0
+Figure 3: rp(~x) breakdown for p := time stretching,
+pitch shifting, and noise injection. x indicates the
+original signal. A darker red (green) color indicates
+a stronger drop (increase) in probability.
+of the signal (i.e., making it twice as fast) makes
+the prediction “action=increase” drop severely. We
+hypothesize this effect is due to the fact that the
+leading phrase “Turn on” becomes hardly intelligi-
+ble.
+Similarly, the model is generally robust to pitch
+shifting. We see the prediction change only in ex-
+treme cases when the pitch is tuned up or down
+by three or more semitones. These cases are “lo-
+cation=bedroom” (pitch up and down) and “ac-
+tion=increase” (pitch up). Finally, the model is af-
+fected starting when the signal-to-noise ratio (SNR)
+reaches 10 dB. Interestingly, the effect varies across
+slots. The “location” prediction drops first, fol-
+lowed by “action” and “object” whose prediction
+changes after SNR is as low as 1 dB.
+Tables and heatmaps provide two complemen-
+tary tools for the intepretability of SLU mod-
+els. The former is helpful for a first, high-level
+glance to understand whether specific tokens or
+non-linguistic features have driven the model out-
+put. Heatmaps uncover where and to which extent a
+model is sensitive to input perturbation. Moreover,
+note that our framework can easily be extended
+to other forms of p. We will provide easy-to-use
+Python implementations to facilitate and enrich
+such multi-faceted analysis.
+Global level. We aggregate the importance
+scores of word audio segments or paralinguistic
+levels across the entire dataset to investigate the
+global influence of each component.
+2225
+=== PAGE 6 ===
+0.0 0.5 1.0 1.5
+softer
+quieter
+sock
+more
+less
+up
+louder
+off
+cooler
+resume
+increase
+quiet
+newspaper
+stop
+pause
+Label: action
+activate
+deactivate
+increase
+decrease
+bring
+change language
+Figure 4: Top 15 most influential words, separately for
+each predicted class. FSC dataset, Slot: Action.
+speed pitch
+up down down up reverb noise
+action 0.13 0.09 0.12 0.07 0.27 0.37
+object 0.07 0.05 0.07 0.04 0.17 0.43
+location 0.06 0.04 0.06 0.04 0.11 0.21
+Table 3: Averager(x, p) for p := time stretching (speed
+variation), pitch shifting, and noise injection; FSC
+dataset. The higher the score (and darker the color),
+the more the model is sensitive to perturbing the feature.
+Figure 4 shows a summary plot for the word-
+level audio segment explanations of wav2vec 2.0
+predictions on the FSC test set for the slot “action.”
+We first compute the explanations for the predicted
+classes. Then, we aggregate audio segments corre-
+sponding to the same transcripted word after basic
+processing (i.e., lowercase, punctuation removal,
+noun singularization). We report the top 15 seg-
+ments, occurring at least 5 times in the dataset,
+with the highest average importance. The average
+importance scores are represented separately for
+each class. Hence, the summary plot shows which
+spoken words are associated with which predicted
+class(es). From Figure 4, the importance score for
+spoken words such as ‘ newspaper’ and ‘ cooler’
+across the entire test set is associated with a single
+class value. Each class ( ‘ bring’ and ‘decrease’)
+corresponds to a plausible value. When a term is as-
+sociated with multiple labels, the summary plot can
+become a debugging tool. For instance, the spoken
+word ‘pause’ is correctly linked to the predicted
+action ‘deactivate’ but erroneously connected to
+‘decrease.’
+Table 3 shows the average importance score of
+paralinguistic explanations aggregated for each la-
+bel. We observe higher average importance scores
+for the action label for the time stretching compo-
+nent, specifically when compressing the utterance
+duration (‘stretch down’). The pitch transforma-
+tions induce a higher change in the prediction prob-
+ability for the action slot, especially when lowering
+the pitch. Finally, adding background noise glob-
+ally impacts the model prediction.
+We further investigate the complementary points
+of view of word-level and paralinguistic attribu-
+tions in Appendix C.
+4.2 Quantitative Faithfulness Evaluation
+A significant research effort has been devoted to the
+evaluation of post-hoc explainability (Atanasova
+et al., 2020; Agarwal et al., 2022; DeYoung et al.,
+2020). Faithfulness and plausibility have been
+conceptualized as two crucial desiderata to make
+explanations meaningful and trustworthy (Jacovi
+and Goldberg, 2020). Faithfulness measures eval-
+uate how accurately the explanation reflects the
+model’s inner workings, whereas plausibility mea-
+sures whether it matches human expectations.
+We quantitatively evaluate the faithfulness of
+our word-level audio segment explanations in this
+section and discuss a user study for plausibility in
+§5. Our focus on word-level explanations is driven
+by token-level explainability. Building upon prior
+works on text-based explanations (DeYoung et al.,
+2020; Jacovi and Goldberg, 2020), we extend and
+adapt existing evaluation metrics to the specific
+context of audio segment explanations.
+Metrics. We generalize comprehensiveness and
+sufficiency (DeYoung et al., 2020), two widely
+adopted faithfulness measures. These metrics were
+originally designed for token-level explanations in
+text classification, where explainers assign a rele-
+vance score to each token. Being in a similar setup,
+we use audio segments rather than tokens, leaving
+the metric unchanged.
+Comprehensiveness evaluates whether the ex-
+planation identifies the audio segments the model
+“truly relied upon” to make the prediction. We
+measure it by progressively masking the audio seg-
+ments highlighted by the explanation, observing
+the change in probability, and finally averaging
+the results. A high value of comprehensiveness
+indicates that the audio segments highlighted by
+the explanations are relevant to the prediction (see
+DeYoung et al. (2020) for more details).
+Sufficiency evaluates if the audio segments in the
+explanation are sufficient for the model to make the
+prediction. Differently from comprehensiveness,
+we preserve only the relevant audio segments and
+compute the prediction difference. A low score in-
+2226
+=== PAGE 7 ===
+FSC ITALIC IEMOCAP
+Method action object location intent emotion
+WA-L1O 0.623 0.627 0.467 0.693 0.507
+WA-LIME 0.638 0.663 0.481 0.723 0.484
+random 0.299±0.002 0.251±0.005 0.192±0.005 0.325±0.005 0.274±0.005
+WA-L1O 0.161 0.086 0.063 0.158 0.310
+WA-LIME 0.165 0.077 0.054 0.139 0.264
+random 0.483±0.004 0.447±0.007 0.338±0.002 0.558±0.002 0.454±0.004
+Table 4: Comprehensiveness (↑, top) and Sufficiency (↓, bottom) scores for our word attribution explanation via
+leave-one-out (WA-L1O ), our word-level LIME (WA-LIME ), and random attribution for the FSC, ITALIC , and
+IEMOCAP datasets, separately for each label. Best result in bold.
+dicates that the audio segments in the explanations
+indeed drive the prediction.
+Baseline. We assess the quality of explanations
+compared to a random explainer. The random ex-
+plainer assigns a random score in the range [-1, 1]
+to each word audio level segment.
+Results. Table 4 shows the comprehensiveness
+and sufficiency results for the FSC , ITALIC , and
+IEMOCAP datasets, separately for each label. We
+generated our word-level audio segment explana-
+tions with respect to the predicted class. We report
+our results for both the leave one out (WA-L1O )
+and the LIME-based ( WA-LIME ) methods. For
+the random baseline, we consider five rounds of
+generations, and we report average and standard
+deviation. The results in Table 4 show that our
+word-level explanations outperform the random
+baseline for both metrics. Moreover, WA-LIME
+explanations are generally more faithful.
+5 Plausibility User Study
+Plausibility to humans is another essential desider-
+atum of good explanations. It measures whether
+explanations are reasonable, believable, and, more
+generally, align with human reasoning (DeYoung
+et al., 2020; Jacovi and Goldberg, 2020).
+We conducted a user study to assess whether
+our approach produced plausible explanations. We
+focused on word-level audio segment attribution
+in the Intent Detection task in English and Italian.
+The target of our study was practitioners knowl-
+edgeable in machine learning. See Appendix D for
+full details.
+5.1 Study Design
+Quality Control. To help participants familiarize
+themselves with the task and to check if our def-
+inition of plausibility applies, we provided some
+initial questions as sanity checks and quality con-
+trol. In practice, we asked participants to compare
+our explanations with a baseline method that as-
+signs random scores to every word and to express
+a preference.8 This task tests if the study questions
+are well-framed and our explanations are informa-
+tive (at least over random attribution).
+Plausibility Assessment. To understand the per-
+ceived plausibility of explanations, we asked par-
+ticipants to rate the plausibility of the explanations
+in absolute terms on a 4-point Likert-like scale.
+Visualization Strategy. Recent evidence shows
+that different visualization strategies impact cog-
+nitive load, efficiency, and efficacy (Schuff et al.,
+2022). Our color-coded score approach (see Ta-
+ble 1) combines a word-level saliency map with
+the precise indication of the score overlaid onto it.
+However, we are interested in finding out if better
+options exist. We asked participants to compare our
+solution against plain word saliency maps (Arras
+et al., 2017; Arora et al., 2022), and bar charts for
+ease-of use and scalability to many examples.
+5.2 Findings
+Our study involved 35 participants recruited from
+university courses and research laboratories close
+to our institutions. We report here the main findings.
+Please refer to Appendix D for full results.
+The quality control checks confirmed that our
+approach can provide plausible insights. In the
+head-to-head comparison, all participants preferred
+our explanation over the random one for both FSC
+(IC, English) and ITALIC (IC, Italian) across all
+8We verified that all study recordings were intelligible.
+There is at least one Italian native speaker and a B2-level
+English speaker among the authors.
+2227

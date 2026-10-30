@@ -1,0 +1,12 @@
+.venv/
+__pycache__/
+*/__pycache__/
+*/*/__pycache__/
+*.py[cod]
+*$py.class
+.ipynb_checkpoints/
+*.egg-info/
+dist/
+build/
+dataset/
+table4_full_checkpoint.csv
