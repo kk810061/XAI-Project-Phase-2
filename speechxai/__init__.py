@@ -24,6 +24,11 @@ except ImportError:
     pass
 
 try:
+    from .explainers.shap_speech_explainer import SHAPSpeechExplainer
+except ImportError:
+    pass
+
+try:
     from .explainers.explanation_speech import ExplanationSpeech
 except ImportError:
     pass

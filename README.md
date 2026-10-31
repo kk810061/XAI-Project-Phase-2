@@ -19,6 +19,7 @@ We provide two types of insights. 🚀
 * 🔍 **[Changes From Original Repository](CHANGES_FROM_ORIGINAL.md)**: Transparent summary of the 3 compatibility fixes made vs. the upstream EACL 2024 repository.
 * 🧪 **[Phase 2 Gap 1 Experiment](GAP1_EXPERIMENT.md)**: Noise-matched word masking implementation and controlled comparison protocol.
 * 🧪 **[Phase 2 Gap 4 Experiment](GAP4_EXPERIMENT.md)**: Crossed comparison of attribution masks and faithfulness-evaluation masks.
+* 🧪 **[Phase 2 WA-SHAP Experiment](SHAP_EXPERIMENT.md)**: Hard-silence, full-split comparison of WA-LOO, WA-LIME, and word-level KernelSHAP.
 
 ---
 ## How-to  

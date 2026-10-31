@@ -26,6 +26,11 @@ except ImportError:
     LIMESpeechExplainer = None
 
 try:
+    from speechxai.explainers.shap_speech_explainer import SHAPSpeechExplainer
+except ImportError:
+    SHAPSpeechExplainer = None
+
+try:
     from speechxai.explainers.paraling_speech_explainer import ParalinguisticSpeechExplainer
 except ImportError:
     ParalinguisticSpeechExplainer = None
@@ -94,6 +99,8 @@ class Benchmark:
                 )
             if LIMESpeechExplainer is not None:
                 self.explainers["LIME"] = LIMESpeechExplainer(self.model_helper)
+            if SHAPSpeechExplainer is not None:
+                self.explainers["SHAP"] = SHAPSpeechExplainer(self.model_helper)
             if ParalinguisticSpeechExplainer is not None:
                 self.explainers["perturb_paraling"] = ParalinguisticSpeechExplainer(self.model_helper)
             if RandomSpeechExplainer is not None:
@@ -161,11 +168,11 @@ class Benchmark:
         else:
             if methodology not in self.explainers:
                 raise ValueError(
-                    f'Explainer {methodology} not supported. Choose between "LOO", "Gradient", "GradientXInput", "LIME", "perturb_paraling", "Random"'
+                    f'Explainer {methodology} not supported. Choose between "LOO", "Gradient", "GradientXInput", "LIME", "SHAP", "perturb_paraling", "Random"'
                 )
             if "LOO" in methodology:
                 explainer_args["removal_type"] = removal_type
-            elif "LIME" in methodology:
+            elif "LIME" in methodology or "SHAP" in methodology:
                 explainer_args["removal_type"] = removal_type
                 explainer_args["num_samples"] = num_samples
                 explainer_args["seed"] = SEED if seed is None else seed
