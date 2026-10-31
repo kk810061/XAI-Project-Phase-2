@@ -268,7 +268,8 @@ def main():
     summary.to_csv(output_dir / "shap_summary_long.csv", index=False)
     new_rows = build_table4(summary)
     baseline_path = Path(args.baseline_table)
-    if not args.skip_faithfulness and baseline_path.is_file():
+    # A limited pilot must never be displayed beside Phase 1 full-split rows.
+    if not args.skip_faithfulness and args.limit is None and baseline_path.is_file():
         baseline = pd.read_csv(baseline_path)
         table4 = pd.concat([baseline, new_rows], ignore_index=True)
     else:
