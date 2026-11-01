@@ -1,0 +1,7 @@
+method,slot,n,comprehensiveness_mean,comprehensiveness_std,sufficiency_mean,sufficiency_std
+WA-LIME,action,100,,,,
+WA-LIME,location,100,,,,
+WA-LIME,object,100,,,,
+WA-SHAP,action,100,,,,
+WA-SHAP,location,100,,,,
+WA-SHAP,object,100,,,,
