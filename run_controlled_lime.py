@@ -49,11 +49,11 @@ def compute_lime_words_only(model_helper, audio_path, words_transcript, num_samp
             predict_fn,
             num_features=len(splits),
             num_slices=len(splits),
-            slices=splits,
+            splits=splits,
             replacement_method="silence",
             num_samples=num_samples,
             labels=[target_class],
-            distance_metric="cosine",
+            random_seed=seed,
         )
         scores_dict = dict(exp.as_list(target_class))
         slot_scores = [scores_dict.get(w["word"], 0.0) for w in words_transcript]
