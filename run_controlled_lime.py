@@ -55,12 +55,20 @@ def compute_lime_words_only(model_helper, audio_path, words_transcript, num_samp
             labels=[target_class],
             random_seed=seed,
         )
-        scores_dict = dict(exp.as_list(target_class))
-        slot_scores = [scores_dict.get(w["word"], 0.0) for w in words_transcript]
+        # LIME's as_map() keys are feature indices; map those indices back to
+        # the aligned words so repeated word strings remain distinct features.
+        scores_dict = dict(exp.as_map()[target_class])
+        slot_scores = [scores_dict.get(index, 0.0) for index in range(len(splits))]
         scores.append(slot_scores)
         
     features = [w["word"] for w in words_transcript]
-    return ExplanationSpeech("LIME_WordsOnly", features, np.array(scores), targets, audio_path=audio_path)
+    return ExplanationSpeech(
+        features=features,
+        scores=np.asarray(scores, dtype=float),
+        explainer="LIME_WordsOnly",
+        target=targets,
+        audio_path=audio_path,
+    )
 
 def main():
     parser = argparse.ArgumentParser()
@@ -97,7 +105,7 @@ def main():
         seed_scores = {}
         for s in seeds:
             exp = compute_lime_words_only(benchmark.model_helper, audio_path, words, num_samples=args.num_samples, seed=s)
-            seed_scores[s] = exp.scores # shape: (3, num_words)
+            seed_scores[s] = np.asarray(exp.scores, dtype=float)  # shape: (3, num_words)
             
         # Compute pairwise seed comparisons
         for s1, s2 in itertools.combinations(seeds, 2):
