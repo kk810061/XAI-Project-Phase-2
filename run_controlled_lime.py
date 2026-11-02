@@ -59,7 +59,9 @@ def compute_lime_words_only(
     """LIME explainer using strictly aligned word segments (no inter-word gaps)."""
     np.random.seed(seed)
     audio_segment = AudioSegment.from_wav(audio_path)
-    audio = pydub_to_np(audio_segment)[0]
+    # pydub_to_np returns shape (samples, channels); LIME expects a 1-D mono
+    # waveform here so it does not interpret each sample as a channel.
+    audio = pydub_to_np(audio_segment)[0].squeeze()
     sampling_rate = model_helper.feature_extractor.sampling_rate
     
     predict_fn = batched_all_slot_predictor(model_helper, batch_size)
@@ -166,12 +168,26 @@ def main():
             for slot_idx, slot in enumerate(SLOTS):
                 v1 = seed_scores[s1][slot_idx]
                 v2 = seed_scores[s2][slot_idx]
-                if len(v1) > 1:
+                if len(v1) > 1 and np.std(v1) > 0 and np.std(v2) > 0:
                     corr, _ = spearmanr(v1, v2)
-                    if np.isnan(corr): corr = 1.0
+                    if not np.isfinite(corr):
+                        corr = np.nan
                 else:
-                    corr = 1.0
-                top_agree = 1.0 if np.argmax(np.abs(v1)) == np.argmax(np.abs(v2)) else 0.0
+                    corr = np.nan
+
+                # A single top word is not defined when the maximum absolute
+                # attribution is tied. In particular, np.argmax would always
+                # select the first tied word and falsely inflate agreement.
+                abs_v1 = np.abs(v1)
+                abs_v2 = np.abs(v2)
+                max_v1 = np.max(abs_v1) if len(abs_v1) else np.nan
+                max_v2 = np.max(abs_v2) if len(abs_v2) else np.nan
+                top_v1 = np.flatnonzero(np.isclose(abs_v1, max_v1)) if len(abs_v1) else []
+                top_v2 = np.flatnonzero(np.isclose(abs_v2, max_v2)) if len(abs_v2) else []
+                if len(top_v1) == 1 and len(top_v2) == 1:
+                    top_agree = float(top_v1[0] == top_v2[0])
+                else:
+                    top_agree = np.nan
                 row_records.append({
                     "method": "WA-LIME (WordsOnly)",
                     "sample_id": row["path"],
@@ -188,7 +204,9 @@ def main():
     res_df = pd.read_csv(out_path)
     
     per_sample = res_df.groupby("sample_id")[["spearman_rank_correlation", "top_word_agreement"]].mean()
-    print("\n=== CONTROLLED WORD-ONLY LIME RESULTS (N=100) ===")
+    print("\n=== CONTROLLED WORD-ONLY LIME RESULTS ===")
+    print(f"Undefined Spearman comparisons: {res_df['spearman_rank_correlation'].isna().sum()}/{len(res_df)}")
+    print(f"Undefined top-word comparisons: {res_df['top_word_agreement'].isna().sum()}/{len(res_df)}")
     print(f"Mean Spearman: {per_sample['spearman_rank_correlation'].mean():.4f} +/- {1.96 * per_sample['spearman_rank_correlation'].std() / np.sqrt(len(per_sample)):.4f}")
     print(f"Top-Word Agreement: {per_sample['top_word_agreement'].mean()*100:.2f}% +/- {1.96 * per_sample['top_word_agreement'].std() / np.sqrt(len(per_sample))*100:.2f}%")
 
