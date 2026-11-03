@@ -475,10 +475,19 @@ def perturb_noise_matched(
     fade_in = np.sin(phase) ** 2
     fade_out = fade_in[::-1]
 
-    for channel in channels:
-        source = m[channel].copy()
-        rng = np.random.default_rng(seed + int(channel))
-        replacement = rng.normal(0.0, noise_rms, end_idx - start_idx)
+    # The standard LIME path supplies shape ``(channels, samples)``, while
+    # the controlled word-only runner supplies a 1-D waveform.  Treating a
+    # 1-D waveform as ``m[channel]`` selects one scalar sample rather than a
+    # channel, which silently breaks noise masking.  Handle both layouts.
+    if m.ndim == 1:
+        channel_views = [(0, m)]
+    else:
+        channel_views = [(int(channel), m[int(channel)]) for channel in channels]
+
+    for channel, source in channel_views:
+        replacement = np.random.default_rng(seed + channel).normal(
+            0.0, noise_rms, end_idx - start_idx
+        )
         replacement = np.clip(replacement, -1.0, 1.0)
         if fade_length > 0:
             replacement[:fade_length] = (
@@ -489,4 +498,4 @@ def perturb_noise_matched(
                 source[end_idx - fade_length : end_idx] * (1.0 - fade_out)
                 + replacement[-fade_length:] * fade_out
             )
-        m[channel][start_idx:end_idx] = replacement
+        source[start_idx:end_idx] = replacement

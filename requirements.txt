@@ -11,6 +11,7 @@ huggingface-hub
 captum
 lime
 scikit-learn
+scipy
 
 # Audio Processing & Paralinguistic Perturbations
 librosa

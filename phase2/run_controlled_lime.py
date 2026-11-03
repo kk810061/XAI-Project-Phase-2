@@ -7,6 +7,11 @@ import argparse
 import itertools
 from pathlib import Path
 import json
+import sys
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+
 import numpy as np
 import pandas as pd
 import torch
@@ -113,7 +118,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--input-csv", default="data/fsc/fluent_speech_commands_dataset/data/test_data.csv")
     parser.add_argument("--audio-root", default="data/fsc/fluent_speech_commands_dataset")
-    parser.add_argument("--output-csv", default="Final results XAI/SHAP instability/controlled_lime_stability.csv")
+    parser.add_argument("--output-csv", default="Final results XAI/SHAP instability/lime_pairs.csv")
     parser.add_argument("--limit", type=int, default=100)
     parser.add_argument("--sample-seed", type=int, default=42)
     parser.add_argument("--seeds", default="42,43,44,45,46")
@@ -168,7 +173,7 @@ def main():
             for slot_idx, slot in enumerate(SLOTS):
                 v1 = seed_scores[s1][slot_idx]
                 v2 = seed_scores[s2][slot_idx]
-                if len(v1) > 1 and np.std(v1) > 0 and np.std(v2) > 0:
+                if len(v1) > 1 and len(v2) > 1 and np.std(v1) > 0 and np.std(v2) > 0:
                     corr, _ = spearmanr(v1, v2)
                     if not np.isfinite(corr):
                         corr = np.nan
@@ -184,7 +189,7 @@ def main():
                 max_v2 = np.max(abs_v2) if len(abs_v2) else np.nan
                 top_v1 = np.flatnonzero(np.isclose(abs_v1, max_v1)) if len(abs_v1) else []
                 top_v2 = np.flatnonzero(np.isclose(abs_v2, max_v2)) if len(abs_v2) else []
-                if len(top_v1) == 1 and len(top_v2) == 1:
+                if len(v1) > 1 and len(v2) > 1 and len(top_v1) == 1 and len(top_v2) == 1:
                     top_agree = float(top_v1[0] == top_v2[0])
                 else:
                     top_agree = np.nan
@@ -204,11 +209,25 @@ def main():
     res_df = pd.read_csv(out_path)
     
     per_sample = res_df.groupby("sample_id")[["spearman_rank_correlation", "top_word_agreement"]].mean()
+
+    def print_clustered_metric(column, label, percent=False):
+        """Report a cluster-level mean and CI using only defined samples."""
+        values = per_sample[column].dropna()
+        if values.empty:
+            print(f"{label}: undefined for all samples")
+            return
+        half_width = 1.96 * values.std(ddof=1) / np.sqrt(len(values))
+        scale = 100.0 if percent else 1.0
+        suffix = "%" if percent else ""
+        print(
+            f"{label} (N={len(values)} valid samples): "
+            f"{values.mean() * scale:.2f}{suffix} +/- {half_width * scale:.2f}{suffix}"
+        )
     print("\n=== CONTROLLED WORD-ONLY LIME RESULTS ===")
     print(f"Undefined Spearman comparisons: {res_df['spearman_rank_correlation'].isna().sum()}/{len(res_df)}")
     print(f"Undefined top-word comparisons: {res_df['top_word_agreement'].isna().sum()}/{len(res_df)}")
-    print(f"Mean Spearman: {per_sample['spearman_rank_correlation'].mean():.4f} +/- {1.96 * per_sample['spearman_rank_correlation'].std() / np.sqrt(len(per_sample)):.4f}")
-    print(f"Top-Word Agreement: {per_sample['top_word_agreement'].mean()*100:.2f}% +/- {1.96 * per_sample['top_word_agreement'].std() / np.sqrt(len(per_sample))*100:.2f}%")
+    print_clustered_metric("spearman_rank_correlation", "Mean Spearman")
+    print_clustered_metric("top_word_agreement", "Top-word agreement", percent=True)
 
 if __name__ == "__main__":
     main()

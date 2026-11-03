@@ -150,7 +150,6 @@ def remove_specified_words(audio, words, removal_type: str = "nothing"):
     audio_removed = deepcopy(audio)
 
     noise_rms = _estimate_noise_rms(audio) if removal_type == "noise_matched" else None
-    # Apply intervals from right to left so earlier timestamps remain valid.
     intervals = sorted(
         (
             max(0, int(word["start"] * 1000) - MASK_MARGIN_BEFORE_MS),
@@ -158,7 +157,22 @@ def remove_specified_words(audio, words, removal_type: str = "nothing"):
         )
         for word in words
     )
-    for index, (start, end) in enumerate(reversed(intervals)):
+
+    # Adjacent spoken words often have margins that overlap.  Replacing them
+    # one at a time would make a later crossfade use synthetic noise created
+    # by an earlier replacement as its source.  Mask the union instead, so a
+    # multi-word rationale has one deterministic replacement per continuous
+    # removed region.  This has identical behaviour for hard silence.
+    merged_intervals = []
+    for start, end in intervals:
+        if not merged_intervals or start > merged_intervals[-1][1]:
+            merged_intervals.append([start, end])
+        else:
+            merged_intervals[-1][1] = max(merged_intervals[-1][1], end)
+
+    # Apply from right to left so the implementation remains correct if a
+    # future removal method changes duration.
+    for index, (start, end) in enumerate(reversed(merged_intervals)):
         audio_removed = _mask_audio_interval(
             audio_removed,
             start,

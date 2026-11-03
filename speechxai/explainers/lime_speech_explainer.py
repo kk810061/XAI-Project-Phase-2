@@ -77,7 +77,9 @@ class LIMESpeechExplainer:
         if words_trascript is None:
             # Transcribe audio
             _, words_trascript = transcribe_audio(
-                audio_path=audio_path, language=self.model_helper.language
+                audio_path=audio_path,
+                device=self.model_helper.device.type,
+                language=self.model_helper.language,
             )
         audio_np = audio.reshape(1, -1)
 

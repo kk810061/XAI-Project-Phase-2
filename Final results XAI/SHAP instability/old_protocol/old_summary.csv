@@ -1,0 +1,3 @@
+explainer,seed_pair_comparison_count,mean_spearman_rank_correlation_between_seed_runs,mean_top_word_agreement_by_highest_signed_attribution,top_word_selection_rule
+WA-LIME,3000,0.761718903,0.847333333,highest signed attribution (argmax score)
+WA-SHAP,3000,0.953431602,0.956666667,highest signed attribution (argmax score)

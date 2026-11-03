@@ -1,0 +1,3 @@
+method,valid_samples,rank_mean,rank_ci95_halfwidth,rank_pair_count,abs_top_mean,abs_top_ci95_halfwidth,abs_top_pair_count
+WA-LIME (separate word-only run),97,0.87315824,0.01849047,2910,0.87800687,0.02692684,2910
+WA-SHAP,97,0.95199134,0.02213789,2910,0.95120275,0.02576417,2910
