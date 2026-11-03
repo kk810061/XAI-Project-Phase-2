@@ -68,16 +68,26 @@ proof about all LIME or SHAP use.
 
 ### Implementation changes
 
-- **Gap 1 (noise-matched masking):** `speechxai/explainers/utils_removal.py`
-  implements the noise replacement; `phase2/run_gap1_comparison.py` runs the
-  paired LOO/LIME comparison.
-- **Controlled word-only LIME stability:** `phase2/run_controlled_lime.py`
-  generates LIME explanations over aligned words only, without empty-span
-  features, for the five-seed comparison.
-- **WA-SHAP and evaluation:** `speechxai/explainers/shap_speech_explainer.py`
-  implements the word-coalition explainer; `phase2/run_shap_comparison.py`
-  runs the explanation experiment; `phase2/build_stability_comparison.py`
-  computes the matched LIME/SHAP stability metrics and summary.
+The main new or reorganized Phase 2 files are:
+
+- `speechxai/explainers/shap_speech_explainer.py`: word-coalition KernelSHAP
+  explainer used for WA-SHAP.
+- `phase2/run_gap1_comparison.py`: paired full-test Gap 1 experiment runner.
+- `phase2/run_controlled_lime.py`: five-seed LIME runner using aligned words
+  only (no empty-span features).
+- `phase2/run_shap_comparison.py`: WA-SHAP attribution and faithfulness runner.
+- `phase2/build_stability_comparison.py`: builds the matched per-sample and
+  summary stability tables from the controlled LIME and SHAP result files.
+
+The following existing implementation files were modified to support these
+experiments:
+
+- `speechxai/explainers/utils_removal.py`: noise-matched masking and merged
+  overlapping removal intervals.
+- `speechxai/explainers/lime_timeseries.py`: handles both one-dimensional and
+  channel-first audio in noise-matched perturbations.
+- `speechxai/explainers/lime_speech_explainer.py`: passes the model device to
+  WhisperX when it performs word alignment internally.
 
 ### What the results do and do not establish
 
@@ -145,14 +155,29 @@ python phase2/run_controlled_lime.py \
   --limit 100 --sample-seed 42 --seeds 42,43,44,45,46 --num-samples 100
 ```
 
-To run the WA-SHAP stability experiment, use `phase2/run_shap_comparison.py` on the
-same 100-example subset, with `--methods LIME,SHAP --skip-faithfulness
---sample-seed 42 --seeds 42,43,44,45,46 --num-samples 100` and
-`--output-dir output/reproduction/shap`. Keep these raw rerun files separate
-from the curated submission results. The final `shap_vectors.csv` contains the
-WA-SHAP rows from that run. The comparison builder reads the curated `lime_pairs.csv`
-and `shap_vectors.csv`, then rebuilds the matched per-sample results and
-summary:
+Run WA-SHAP separately on the same sampled utterances. Use `--methods SHAP`:
+the `LIME` option in this general runner uses the standard LIME feature setup,
+not the controlled word-only setup used for the reported stability comparison.
+This creates `shap_per_example.csv` containing the WA-SHAP vectors:
+
+```bash
+python phase2/run_shap_comparison.py data/fsc/fluent_speech_commands_dataset/data/test_data.csv \
+  --audio-column path \
+  --audio-root data/fsc/fluent_speech_commands_dataset \
+  --output-dir "output/reproduction/shap" \
+  --methods SHAP --limit 100 --sample-seed 42 \
+  --seeds 42,43,44,45,46 --num-samples 100 --skip-faithfulness
+```
+
+The stability builder reads `Final results XAI/SHAP instability/lime_pairs.csv`
+and `shap_vectors.csv`, then writes the matched per-sample table and summary
+beside them. For a fresh reproduction, use the newly generated controlled
+LIME file and SHAP `shap_per_example.csv` as those two inputs. Back up the
+curated input and output files before replacing them; the builder writes to the
+curated results folder. Keep raw reruns in `output/reproduction/` until you
+choose to rebuild the curated comparison.
+
+To rebuild the matched summary from the curated inputs:
 
 ```bash
 python phase2/build_stability_comparison.py
